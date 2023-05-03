@@ -6,10 +6,10 @@ AlloGen is a Python library aimed at employing generative models such as Generat
 
 AlloGen provides the following features:
 
-	* Generation of alloy compositions with desired properties
-	* Training of generative models using custom datasets
-	* Calculation of materials properties from alloy compositions
-	* Integration with other Python libraries for machine learning and materials science
+* Generation of alloy compositions with desired properties
+* Training of generative models using custom datasets
+* Calculation of materials properties from alloy compositions
+* Integration with other Python libraries for machine learning and materials science
 
 ## Installation
 
@@ -28,11 +28,11 @@ To-Do
 
 We welcome contributions from the community. To contribute, please follow these steps:
 
-	1. Fork the repository and create a new branch for your feature or bug fix.
-	2. Write tests for your code.	
-	3. Implement your feature or bug fix.
-	4. Run the tests and ensure they pass.
-	5. Commit your changes and submit a pull request.
+1. Fork the repository and create a new branch for your feature or bug fix.
+2. Write tests for your code.	
+3. Implement your feature or bug fix.
+4. Run the tests and ensure they pass.
+5. Commit your changes and submit a pull request.
 
 ## License 
 
