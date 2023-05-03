@@ -18,6 +18,7 @@ To use AlloGen, import the necessary modules and functions from the library:
 ```python
 pip install AlloGen
 
+```
 
 ## Usage
 
