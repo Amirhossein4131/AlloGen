@@ -69,11 +69,5 @@ def binary_configs(matrix, substitutional_type, percentage, num_configs, output_
 
     return configs_lmp
 
-# %%
-#Ni_matrix = fcc_supercell(2, "Ni", 3.52)
-
-# %%
-#NiAl10 = binary_configs(Ni_matrix, "Al", 0.10, 10, "NiAl10", lmpdir="lammps-data")
-
 
 
