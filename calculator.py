@@ -9,6 +9,7 @@ from ase.io import lammpsdata
 
 lammps = "lmp"
 
+
 # %%
 def modify_file(input_file, output_file, search_lines, modification_lines):
     # Open the input file for reading
@@ -39,10 +40,10 @@ def modify_file(input_file, output_file, search_lines, modification_lines):
 
 
 # %%
-def create_tmp_min(material, pot, pot_name, elm1, elm2, mass1, mass2, mass3):
+def create_tmp_min(pot, pot_name, elm1, elm2, mass1, mass2, mass3):
     # Define input and output file paths
-    input_file = 'lammps-inputs/in.minimize'
-    output_file = f'lammps-inputs/in.{material}_min_temp'
+    input_file = 'LMP/lammps-inputs/in.minimize'
+    output_file = f'LMP/lammps-inputs/in.min_temp'
 
     # Specify the lines to search for in the input file
     search_lines = ['pair_style', 'pair_coeff', 'm1', 'm2', 'm3']
@@ -58,13 +59,42 @@ def create_tmp_min(material, pot, pot_name, elm1, elm2, mass1, mass2, mass3):
 
     # Call the function to modify the input file
     modify_file(input_file, output_file, search_lines, modification_lines)
-
+    
 
 # %%
-def lmp_calculator():
-    os.system(f"{lammps} -in lammps-inputs/in.NiFe_min_temp")
+def lmp_energy_calculator(pot, pot_name, elm1, elm2, elm3, mass1, mass2, mass3):
+    # list of available structures
+    folder_path = 'LMP/lammps-data'
+    files = os.listdir(folder_path)
+    file_names = []
+    for file_name in files:
+        file_names.append(file_name)
+    
+    # modify read_data and run the minimisation
+    
+    input_file = 'LMP/lammps-inputs/in.minimize'
+    output_file = f'LMP/lammps-inputs/'
 
-lmp_calculator()
+    # Specify the lines to search for in the input file
+    search_lines = ['pair_style', 'pair_coeff', 'm1', 'm2', 'm3', 'read_data']
+
+    # Specify the lines to modify in the input file
+
+
+    for name in file_names:
+        modification_lines = [
+            ('pair_style', f'pair_style {pot}'),
+            ('pair_coeff', f'pair_coeff * * ../potentials/{pot_name} {elm1} {elm2} {elm3}'),
+            ('m1', f'{mass1}'),
+            ('m2', f'{mass2}'),
+            ('m3', f'{mass3}'), 
+            ("read_data", f"read_data {folder_path}/{name}")]
+        
+        modify_file(input_file, output_file+f'in.{name}_min', search_lines, modification_lines)
+        
+        #os.system(f"{lammps} -in LMP/lammps-inputs/in.{name}_min")
+
+#lmp_calculator()
 
 # %%
 
@@ -85,10 +115,10 @@ def lammps_data_to_cif(data_file, cif_file, type1, type2):
     cif_writer = CifWriter(structure)
     cif_writer.write_file(cif_file)
 
-lammps_data_to_cif("./lmp-data-files/NiFe10_0.lmp", "NiFe_2.cif")
+#lammps_data_to_cif("./lmp-data-files/NiFe10_0.lmp", "NiFe_2.cif")
 
 
 # %%
-create_tmp_min("NiFe", "eam/alloy", "NiFeCr.eam.alloy", "Ni", "Fe", "mass 1 2", "mass 2 3", " ")
+#create_tmp_min("NiFe", "eam/alloy", "NiFeCr.eam.alloy", "Ni", "Fe", "mass 1 2", "mass 2 3", " ")
 
 
