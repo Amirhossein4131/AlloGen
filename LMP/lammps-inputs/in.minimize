@@ -10,10 +10,6 @@ boundary        p p p
 atom_style      atomic
 read_data
 
-m1
-m2
-m3
-
 
 # Settings
 neighbor        2.0 bin
@@ -30,4 +26,4 @@ min_style       cg
 minimize        1e-6 1e-8 1000 10000
 
 # Output
-write_data      minimized.data
+wd      

@@ -13,7 +13,14 @@ from ase.io import read, write
 
 # %%
 def reset_db_creation_pipeline():
-    os.system("rm -r LMP/db LMP/lammps-data")
+    os.system("rm -r LMP/Binary LMP/Ternary LMP/relaxed-structures LMP/finalDB LMP/cif-files")
+
+def replace_line(file_name, line_num, text):
+    lines = open(file_name, 'r').readlines()
+    lines[line_num] = text
+    out = open(file_name, 'w')
+    out.writelines(lines)
+    out.close()
 
 # %%
 def fcc_supercell(supercell_size, atom_type, lattice_constant):
@@ -34,14 +41,15 @@ def create_directory(directory):
         pass
 
 # %%
-def binary_configs(matrix, substitutional_type, percentage, num_configs, output_prefix, lmpdir, dbdir):
+def binary_configs(matrix, substitutional_type, percentage, num_configs, output_prefix, lmpdir, dbdir, m1, m2):
     """ Substitutes atoms in a matrix randomly and creates as many configurations as requested. """
     # Create a list to store the resulting supercells
     configs = []
 
     # Create the lammps director
-    create_directory('LMP/'+lmpdir)
-    create_directory('LMP/'+dbdir)
+    create_directory('LMP/Binary')
+    create_directory('LMP/Binary/'+lmpdir)
+    create_directory('LMP/Binary/'+dbdir)
 
     for i in range(num_configs):
 
@@ -66,13 +74,14 @@ def binary_configs(matrix, substitutional_type, percentage, num_configs, output_
         configs_lmp.append(new_supercell)   
         
         # Write the supercell as an XYZ/lmp file with the specified output prefix and index number
-        write(f'LMP/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
-    
-    write(f'LMP/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
+        write(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
+        replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 7, f'\nMasses\n\n1 {m1}\n2 {m2}\n')
+            
+    write(f'LMP/Binary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
     return configs_lmp
 
 # %%
-def binary_data_creator (elm1, elm2, celldim, lc, conf_num):
+def binary_data_creator (elm1, elm2, celldim, lc, conf_num, m1, m2):
     # define matrix
     matrix = fcc_supercell(celldim, elm2, lc)
 
@@ -86,18 +95,20 @@ def binary_data_creator (elm1, elm2, celldim, lc, conf_num):
     # create lammps data
     elm1_comp = 0.10
     for i in range (len(config_range)):
-        binary_configs(matrix, elm1, elm1_comp, conf_num, "%s"%(config_range[i]) , lmpdir="lammps-data", dbdir="db")    
+        binary_configs(matrix, elm1, elm1_comp, conf_num, "%s"%(config_range[i]), m1=m1, m2=m2, lmpdir="lammps-data", dbdir="db")    
         elm1_comp += 0.10
 
 # %%
-def ternary_configs(matrix, type1, substitutional_type2, substitutional_type3, percentage2, percentage3, num_configs, output_prefix, lmpdir, dbdir):
+def ternary_configs(matrix, type1, substitutional_type2, substitutional_type3,
+                     percentage2, percentage3, num_configs, output_prefix, lmpdir, dbdir, m1, m2, m3):
     """Substitutes atoms in a matrix randomly and creates as many ternary configurations as requested."""
     # Create a list to store the resulting supercells
     configs = []
 
     # Create the LAMMPS and database directories if they don't exist
-    Path('LMP/'+lmpdir).mkdir(parents=True, exist_ok=True)
-    Path('LMP/'+dbdir).mkdir(parents=True, exist_ok=True)
+    Path('LMP/Ternary').mkdir(parents=True, exist_ok=True)
+    Path('LMP/Ternary/'+lmpdir).mkdir(parents=True, exist_ok=True)
+    Path('LMP/Ternary/'+dbdir).mkdir(parents=True, exist_ok=True)
 
     for i in range(num_configs):
 
@@ -129,15 +140,16 @@ def ternary_configs(matrix, type1, substitutional_type2, substitutional_type3, p
         configs_lmp.append(new_supercell)
 
         # Write the supercell as an XYZ/LAMMPS file with the specified output prefix and index number
-        write(f'LMP/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
-
-    write(f'LMP/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
+        write(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
+        replace_line(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', 7, f'\nMasses\n\n1 {m1}\n2 {m2}\n3 {m3}\n')
+    
+    write(f'LMP/Ternary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
     return configs_lmp
 
 
 
 
-def ternary_data_creator(elm1, elm2, elm3, celldim, lc, conf_num):
+def ternary_data_creator(elm1, elm2, elm3, celldim, lc, conf_num, m1, m2, m3):
     """ Creatres lmp input datafiles for ternary alloys for different compositions"""
     # define matrix
     matrix = fcc_supercell(celldim, elm1, lc)
@@ -154,4 +166,5 @@ def ternary_data_creator(elm1, elm2, elm3, celldim, lc, conf_num):
 
     # write the lmp data files
     for j in range (len(config_range)):
-        ternary_configs(matrix, elm1, elm2, elm3, e2[j], e3[j], conf_num, f"{config_range[j]}", lmpdir="lammps-data", dbdir="db")
+        ternary_configs(matrix, elm1, elm2, elm3, e2[j], e3[j], conf_num,
+                         f"{config_range[j]}", m1=m1, m2=m2, m3=m3, lmpdir="lammps-data", dbdir="db")
