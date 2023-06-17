@@ -8,6 +8,7 @@ from ase.io import lammpsdata
 from structure import *
 import json
 import subprocess
+import re
 
 lammps = "lmp"
 
@@ -45,9 +46,18 @@ def modify_file(input_file, output_file, search_lines, modification_lines):
 def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
     """minimises the structures and calculates the energy"""
     # dict to write info to and needed directories
-    prop = {}
+
     Path('LMP/relaxed-structures').mkdir(parents=True, exist_ok=True)
     Path('LMP/finalDB').mkdir(parents=True, exist_ok=True)
+
+    if os.path.isfile('LMP/finalDB/energy.json'):
+        # Load the existing data from the JSON file
+        with open('LMP/finalDB/energy.json', "r") as file:
+            prop = json.load(file)
+            #print (prop)
+        os.system('rm LMP/finalDB/energy.json')
+    else:
+        prop = {}
 
     # list of available structures
     folder_path = f'LMP/{alloytype}/lammps-data'
@@ -83,14 +93,19 @@ def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
     os.system("rm LMP/lammps-inputs/*_min")
     os.system("rm log.lammps")
 
-    with open("LMP/finalDB/energy.json", "w") as file:
+    with open("LMP/finalDB/energy.json", "a") as file:
         # Write the dictionary to the file in JSON format
         json.dump(prop, file)
     
+    
 
 # %%
+def extract_element_types(string):
+    element_types = re.findall(r'[A-Z][a-z]*', string)
+    return element_types
 
 def lammps_data_to_cif(type1, type2, type3=None):
+    """Converts relaxed lammps datafiles to cif files"""
     # Path to folders
     Path('LMP/cif-files').mkdir(parents=True, exist_ok=True)
     folder_path = f'LMP/relaxed-structures/'
@@ -109,7 +124,7 @@ def lammps_data_to_cif(type1, type2, type3=None):
         atoms = lammpsdata.read_lammps_data(folder_path+name, style='atomic')
 
         # Manually map LAMMPS atom types to element symbols
-        element_symbols = [f'{type1}', f'{type2}'] if type3 is None else [f'{type1}', f'{type2}', f'{type3}']
+        element_symbols = extract_element_types(f'{name}')
 
         atom_types = atoms.get_array('type')
         atom_symbols = [element_symbols[atom_type-1] for atom_type in atom_types]

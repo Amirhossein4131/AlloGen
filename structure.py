@@ -41,15 +41,16 @@ def create_directory(directory):
         pass
 
 # %%
-def binary_configs(matrix, substitutional_type, percentage, num_configs, output_prefix, lmpdir, dbdir, m1, m2):
+def binary_configs(matrix, substitutional_type, percentage,
+                    num_configs, output_prefix, lmpdir, dbdir, m1, m2):
     """ Substitutes atoms in a matrix randomly and creates as many configurations as requested. """
     # Create a list to store the resulting supercells
     configs = []
 
     # Create the lammps director
     create_directory('LMP/Binary')
-    create_directory('LMP/Binary/'+lmpdir)
-    create_directory('LMP/Binary/'+dbdir)
+    Path('LMP/Binary/'+lmpdir).mkdir(parents=True, exist_ok=True)
+    Path('LMP/Binary/'+dbdir).mkdir(parents=True, exist_ok=True)
 
     for i in range(num_configs):
 
@@ -77,11 +78,11 @@ def binary_configs(matrix, substitutional_type, percentage, num_configs, output_
         write(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
         replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 7, f'\nMasses\n\n1 {m1}\n2 {m2}\n')
             
-    write(f'LMP/Binary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
+    #write(f'LMP/Binary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
     return configs_lmp
 
 # %%
-def binary_data_creator (elm1, elm2, celldim, lc, conf_num, m1, m2):
+def binary_data_creator (elm1, elm2, celldim, lc, conf_num, m1, m2, mat):
     # define matrix
     matrix = fcc_supercell(celldim, elm2, lc)
 
@@ -95,7 +96,8 @@ def binary_data_creator (elm1, elm2, celldim, lc, conf_num, m1, m2):
     # create lammps data
     elm1_comp = 0.10
     for i in range (len(config_range)):
-        binary_configs(matrix, elm1, elm1_comp, conf_num, "%s"%(config_range[i]), m1=m1, m2=m2, lmpdir="lammps-data", dbdir="db")    
+        binary_configs(matrix, elm1, elm1_comp, conf_num,
+                        "%s"%(config_range[i]), m1=m1, m2=m2, lmpdir=f"{mat}/lammps-data", dbdir=f"{mat}/db")    
         elm1_comp += 0.10
 
 # %%
