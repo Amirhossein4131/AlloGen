@@ -96,6 +96,68 @@ def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
     with open("LMP/finalDB/energy.json", "a") as file:
         # Write the dictionary to the file in JSON format
         json.dump(prop, file)
+
+
+def lmp_elastic_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
+    """minimises the structures and calculates the energy"""
+    # dict to write info to and needed directories
+
+    Path('LMP/finalDB').mkdir(parents=True, exist_ok=True)
+
+    if os.path.isfile('LMP/finalDB/elastic.json'):
+        # Load the existing data from the JSON file
+        with open('LMP/finalDB/elastic.json', "r") as file:
+            prop = json.load(file)
+            #print (prop)
+        os.system('rm LMP/finalDB/elastic.json')
+    else:
+        prop = {}
+
+    # list of available structures
+    folder_path = f'LMP/{alloytype}/lammps-data'
+    files = os.listdir(folder_path)
+    file_names = []
+    for file_name in files:
+        file_names.append(file_name)
+    
+    # modify read_data and run in.elastic
+    input_file_init = 'LMP/lammps-inputs/elastic/init.mod'
+    input_file_pot = 'LMP/lammps-inputs/elastic/potential.mod'
+    output_file = f'LMP/lammps-inputs/'
+
+    # Specify the lines to search for in the input file
+    search_lines_init = ['read_data']
+    search_lines_pot = ['pair_style', 'pair_coeff']
+
+    # minimise and save prop to file
+    for name in file_names:
+        modification_init = [
+            ("read_data", f"read_data {folder_path}/{name}")]
+        
+        modification_pot = [
+            ('pair_style', f'pair_style {pot}'),
+            ('pair_coeff', f'pair_coeff * * LMP/potentials/{pot_name} {elm1} {elm2} {elm3}')]
+        
+        # modify init
+        modify_file(input_file_init, output_file+f'init.mod', search_lines_init, modification_init)
+        # modify potential
+        modify_file(input_file_pot, output_file+f'potential.mod', search_lines_pot, modification_pot)
+
+        # run the simulation and get the energy
+        os.system(f"{lammps} -in LMP/lammps-inputs/elastic/in.elastic > /dev/null")
+        os.system(f"rm -r LMP/lammps-inputs/init.mod LMP/lammps-inputs/potential.mod")
+        command = "grep -oP '(?<=^cdvae )\[.*?\]' log.lammps"
+        elastic_vector = subprocess.check_output(command, shell=True, text=True).strip().replace('\n', '')
+        elastic_vector = eval(elastic_vector)
+        prop.update({f"{name.split('.')[0]}":elastic_vector})
+        print(f"{name} DONE")
+            
+    os.system("rm log.lammps restart.equil")
+
+    with open("LMP/finalDB/elastic.json", "a") as file:
+        # Write the dictionary to the file in JSON format
+        json.dump(prop, file)
+    
     
     
 

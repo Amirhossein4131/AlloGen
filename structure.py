@@ -76,7 +76,8 @@ def binary_configs(matrix, substitutional_type, percentage,
         
         # Write the supercell as an XYZ/lmp file with the specified output prefix and index number
         write(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
-        replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 7, f'\nMasses\n\n1 {m1}\n2 {m2}\n')
+        replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 8, f'\nMasses\n\n1 {m1}\n2 {m2}\n')
+        replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 7, '0.0 0.0 0.0 xy xz yz')
             
     #write(f'LMP/Binary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
     return configs_lmp
@@ -143,8 +144,9 @@ def ternary_configs(matrix, type1, substitutional_type2, substitutional_type3,
 
         # Write the supercell as an XYZ/LAMMPS file with the specified output prefix and index number
         write(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
-        replace_line(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', 7, f'\nMasses\n\n1 {m1}\n2 {m2}\n3 {m3}\n')
-    
+        replace_line(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', 8, f'\nMasses\n\n1 {m1}\n2 {m2}\n3 {m3}\n')
+        replace_line(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', 7, '0.0 0.0 0.0 xy xz yz')
+
     write(f'LMP/Ternary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
     return configs_lmp
 
