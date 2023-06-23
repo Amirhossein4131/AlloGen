@@ -41,7 +41,7 @@ def create_directory(directory):
         pass
 
 # %%
-def binary_configs(matrix, substitutional_type, percentage,
+def binary_configs(matrix, substitutional_type, elm2, percentage,
                     num_configs, output_prefix, lmpdir, dbdir, m1, m2):
     """ Substitutes atoms in a matrix randomly and creates as many configurations as requested. """
     # Create a list to store the resulting supercells
@@ -78,6 +78,8 @@ def binary_configs(matrix, substitutional_type, percentage,
         write(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
         replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 8, f'\nMasses\n\n1 {m1}\n2 {m2}\n')
         replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 7, '0.0 0.0 0.0 xy xz yz')
+        replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 0, f'{substitutional_type} {elm2}')
+
             
     #write(f'LMP/Binary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
     return configs_lmp
@@ -97,9 +99,10 @@ def binary_data_creator (elm1, elm2, celldim, lc, conf_num, m1, m2, mat):
     # create lammps data
     elm1_comp = 0.10
     for i in range (len(config_range)):
-        binary_configs(matrix, elm1, elm1_comp, conf_num,
+        binary_configs(matrix, elm1, elm2, elm1_comp, conf_num,
                         "%s"%(config_range[i]), m1=m1, m2=m2, lmpdir=f"{mat}/lammps-data", dbdir=f"{mat}/db")    
         elm1_comp += 0.10
+        
 
 # %%
 def ternary_configs(matrix, type1, substitutional_type2, substitutional_type3,
@@ -146,6 +149,7 @@ def ternary_configs(matrix, type1, substitutional_type2, substitutional_type3,
         write(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', configs_lmp, format="lammps-data")
         replace_line(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', 8, f'\nMasses\n\n1 {m1}\n2 {m2}\n3 {m3}\n')
         replace_line(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', 7, '0.0 0.0 0.0 xy xz yz')
+        replace_line(f'LMP/Ternary/{lmpdir}/{output_prefix}_{i}.lmp', 0, f'{type1} {substitutional_type2} {substitutional_type3}')
 
     write(f'LMP/Ternary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
     return configs_lmp

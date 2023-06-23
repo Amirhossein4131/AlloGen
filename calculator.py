@@ -1,6 +1,7 @@
 # %%
 import os
 import tempfile
+import numpy as np
 from ase.io import read, write
 from pymatgen.io.cif import CifWriter
 from pymatgen.io.ase import AseAtomsAdaptor
@@ -98,7 +99,7 @@ def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
         json.dump(prop, file)
 
 
-def lmp_elastic_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
+def lmp_elastic_calculator(pot, pot_name, alloytype):
     """minimises the structures and calculates the energy"""
     # dict to write info to and needed directories
 
@@ -131,12 +132,17 @@ def lmp_elastic_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
 
     # minimise and save prop to file
     for name in file_names:
+        
+        with open(f'{folder_path}/{name}') as file:
+            lines = file.readlines()
+            elms = lines[0]
+        
         modification_init = [
             ("read_data", f"read_data {folder_path}/{name}")]
         
         modification_pot = [
             ('pair_style', f'pair_style {pot}'),
-            ('pair_coeff', f'pair_coeff * * LMP/potentials/{pot_name} {elm1} {elm2} {elm3}')]
+            ('pair_coeff', f'pair_coeff * * LMP/potentials/{pot_name} {elms}')]
         
         # modify init
         modify_file(input_file_init, output_file+f'init.mod', search_lines_init, modification_init)
@@ -200,3 +206,76 @@ def lammps_data_to_cif(type1, type2, type3=None):
         cif_writer.write_file(cif_path+name.split('.')[0]+'.cif')
 
 
+#%%
+
+def convert_cif_to_lammps(directory):
+    # Get a list of all CIF files in the directory
+    cif_files = [f for f in os.listdir(directory) if f.endswith('.cif')]
+
+    # Convert each CIF file to LAMMPS data format
+    for cif_file in cif_files:
+        cif_path = os.path.join(directory, cif_file)
+
+        # Load CIF file
+        atoms = read(cif_path)
+
+        # Save LAMMPS data file
+        lammps_file = os.path.splitext(cif_path)[0] + '.data'
+        write(lammps_file, atoms, format='lammps-data')
+
+        # Update the LAMMPS data file with masses
+        update_lammps_data_file(lammps_file, atoms)
+
+        print(f"Converted {cif_file} to {lammps_file}")
+
+
+
+
+
+
+def update_lammps_data_file(lammps_file, atoms):
+    # Retrieve the masses and atom types from the CIF file
+    masses = atoms.get_masses()
+    atom_types = atoms.get_atomic_numbers()
+
+    # Read the content of the LAMMPS data file
+    with open(lammps_file, 'r') as f:
+        lines = f.readlines()
+
+    # Find the line number where the atom section starts
+    atom_section_line = None
+    for i, line in enumerate(lines):
+        if line.strip() == "Atoms":
+            atom_section_line = i
+            break
+
+    if atom_section_line is not None:
+        # Insert mass information before the atom section
+        mass_info = ["0 0 0 xy xz yz \n Masses \n\n"]
+        unique_atom_types, indices = np.unique(atom_types, return_index=True)
+        type = 1
+        symbols = []
+        for atom_type, index in zip(unique_atom_types, indices):
+            atom_index = index + 1
+            mass = masses[index]
+            symbol = atoms.get_chemical_symbols()[index]
+            mass_info.append(f"{type} {mass}  #{symbol}\n")
+            type += 1
+            symbols.append(symbol+" ")
+        mass_info.append("\n")
+        lines.insert(atom_section_line, "".join(mass_info))
+        lines[0] = "".join(symbols)
+        #print(atom_section_line)
+
+    # Overwrite the LAMMPS data file with the updated content
+    with open(lammps_file, 'w') as f:
+        f.writelines(lines)
+    
+    return symbols 
+
+
+# Specify the directory containing CIF files
+directory = './LMP/generated_structures/eval_gen_cif/'
+
+# Convert CIF files to LAMMPS data format
+convert_cif_to_lammps(directory)
