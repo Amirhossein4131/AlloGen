@@ -22,8 +22,9 @@ pair_coeff
 # Minimization
 reset_timestep  0
 thermo          10
+fix 1		all box/relax iso 0.0 vmax 0.001
 min_style       cg
-minimize        1e-6 1e-8 1000 10000
+minimize        1e-6 1e-8 5000 10000
 
 # Output
 wd      

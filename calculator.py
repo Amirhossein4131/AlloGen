@@ -48,7 +48,7 @@ def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
     """minimises the structures and calculates the energy"""
     # dict to write info to and needed directories
 
-    Path('LMP/relaxed-structures').mkdir(parents=True, exist_ok=True)
+    Path(f'LMP/relaxed-structures').mkdir(parents=True, exist_ok=True)
     Path('LMP/finalDB').mkdir(parents=True, exist_ok=True)
 
     if os.path.isfile('LMP/finalDB/energy.json'):
@@ -80,7 +80,7 @@ def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
             ('pair_style', f'pair_style {pot}'),
             ('pair_coeff', f'pair_coeff * * LMP/potentials/{pot_name} {elm1} {elm2} {elm3}'),
             ("read_data", f"read_data {folder_path}/{name}"), 
-            ('wd', f'write_data LMP/relaxed-structures/{name}')]
+            ('wd', f'write_data ./LMP/relaxed-structures/{name}')]
         
         modify_file(input_file, output_file+f'in.{name}_min', search_lines, modification_lines)
         
@@ -120,6 +120,7 @@ def lmp_elastic_calculator(pot, pot_name, alloytype):
     file_names = []
     for file_name in files:
         file_names.append(file_name)
+        #replace_line(f'{folder_path}/{file_name}', 0, elm1+" "+elm2+" "+elm3)
     
     # modify read_data and run in.elastic
     input_file_init = 'LMP/lammps-inputs/elastic/init.mod'
@@ -150,7 +151,7 @@ def lmp_elastic_calculator(pot, pot_name, alloytype):
         modify_file(input_file_pot, output_file+f'potential.mod', search_lines_pot, modification_pot)
 
         # run the simulation and get the energy
-        os.system(f"{lammps} -in LMP/lammps-inputs/elastic/in.elastic > /dev/null")
+        os.system(f"mpirun -np 4 {lammps} -in LMP/lammps-inputs/elastic/in.elastic > /dev/null")
         os.system(f"rm -r LMP/lammps-inputs/init.mod LMP/lammps-inputs/potential.mod")
         command = "grep -oP '(?<=^cdvae )\[.*?\]' log.lammps"
         elastic_vector = subprocess.check_output(command, shell=True, text=True).strip().replace('\n', '')
@@ -211,6 +212,7 @@ def lammps_data_to_cif(type1, type2, type3=None):
 def convert_cif_to_lammps(directory):
     # Get a list of all CIF files in the directory
     cif_files = [f for f in os.listdir(directory) if f.endswith('.cif')]
+    Path('LMP/generated/lammps-data').mkdir(parents=True, exist_ok=True)
 
     # Convert each CIF file to LAMMPS data format
     for cif_file in cif_files:
@@ -220,13 +222,14 @@ def convert_cif_to_lammps(directory):
         atoms = read(cif_path)
 
         # Save LAMMPS data file
-        lammps_file = os.path.splitext(cif_path)[0] + '.data'
+        lammps_file = os.path.splitext(cif_path)[0] + '.data' 
         write(lammps_file, atoms, format='lammps-data')
 
         # Update the LAMMPS data file with masses
         update_lammps_data_file(lammps_file, atoms)
 
         print(f"Converted {cif_file} to {lammps_file}")
+    os.system('mv LMP/generated/*.data LMP/generated/lammps-data')
 
 
 
@@ -274,8 +277,8 @@ def update_lammps_data_file(lammps_file, atoms):
     return symbols 
 
 
-# Specify the directory containing CIF files
-directory = './LMP/generated_structures/eval_gen_cif/'
+# # Specify the directory containing CIF files
+# directory = './LMP/generated/'
 
-# Convert CIF files to LAMMPS data format
-convert_cif_to_lammps(directory)
+# # # Convert CIF files to LAMMPS data format
+# convert_cif_to_lammps(directory)

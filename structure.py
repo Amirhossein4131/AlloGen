@@ -11,7 +11,7 @@ from ase.visualize import view
 from ase.io import read, write
 
 
-# %%
+# %%/
 def reset_db_creation_pipeline():
     os.system("rm -r LMP/Binary LMP/Ternary LMP/relaxed-structures LMP/finalDB LMP/cif-files")
 
@@ -81,7 +81,7 @@ def binary_configs(matrix, substitutional_type, elm2, percentage,
         replace_line(f'LMP/Binary/{lmpdir}/{output_prefix}_{i}.lmp', 0, f'{substitutional_type} {elm2}')
 
             
-    #write(f'LMP/Binary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
+    write(f'LMP/Binary/{dbdir}/{output_prefix}.xyz', configs, format="xyz")
     return configs_lmp
 
 # %%
@@ -91,17 +91,24 @@ def binary_data_creator (elm1, elm2, celldim, lc, conf_num, m1, m2, mat):
 
     # Create configuration strings
     config_range = []
-    elm1_perc = 10
-    for i in range (8):
-        config_range.append(elm1+elm2+f"{elm1_perc}")
-        elm1_perc += 10
-    
+    # elm1_perc = 5
+    # for i in range (18):
+    #     config_range.append(elm1+elm2+f"{elm1_perc}")
+    #     elm1_perc += 5
+    # print(config_range)
+
+    for i in range (50):
+        c1 = round(random.uniform(0.02, 0.98), 2)
+        config_range.append(c1)
+       
+
     # create lammps data
-    elm1_comp = 0.10
+
     for i in range (len(config_range)):
-        binary_configs(matrix, elm1, elm2, elm1_comp, conf_num,
-                        "%s"%(config_range[i]), m1=m1, m2=m2, lmpdir=f"{mat}/lammps-data", dbdir=f"{mat}/db")    
-        elm1_comp += 0.10
+        c1 = int(config_range[i]*100)
+        c2 = int(100 - c1)
+        binary_configs(matrix, elm1, elm2, config_range[i], conf_num,
+                        elm1+f"{c1}"+elm2+f"{c2}", m1=m1, m2=m2, lmpdir=f"{mat}/lammps-data", dbdir=f"{mat}/db")    
         
 
 # %%
@@ -163,16 +170,32 @@ def ternary_data_creator(elm1, elm2, elm3, celldim, lc, conf_num, m1, m2, m3):
     matrix = fcc_supercell(celldim, elm1, lc)
 
     # compositions
-    e1 = [0.8, 0.1, 0.1, 0.2, 0.2, 0.2, 0.4, 0.4, 0.6]
-    e2 = [0.1, 0.1, 0.8, 0.6, 0.4, 0.2, 0.4, 0.2, 0.2]
-    e3 = [0.1, 0.8, 0.1, 0.2, 0.4, 0.6, 0.2, 0.4, 0.2]
+    #e1 = [0.8, 0.1, 0.1, 0.2, 0.2, 0.2, 0.4, 0.4, 0.6, 0.82, 0.85, 0.90, 0.12, 0.08, 0.13, 0.11, 0.13, 0.09, 0.23, 0.25, 0.18, 0.22, 0.23, 0.18, 0.17, 0.21, 0.24, 0.44, 0.38, 0.45, 0.42, 0.36, 0.45, 0.62, 0.65, 0.58]
+    #e2 = [0.1, 0.1, 0.8, 0.6, 0.4, 0.2, 0.4, 0.2, 0.2, 0.08, 0.05, 0.07, 0.07, 0.09, 0.12, 0.84, 0.83, 0.76, 0.66, 0.58, 0.63, 0.44, 0.38, 0.46, 0.21, 0.17, 0.23, 0.45, 0.44, 0.35, 0.21, 0.24, 0.18, 0.18, 0.16, 0.24]
+    #e3 = [0.1, 0.8, 0.1, 0.2, 0.4, 0.6, 0.2, 0.4, 0.2, 0.10, 0.10, 0.03, 0.81, 0.83, 0.75, 0.05, 0.04, 0.15, 0.11, 0.17, 0.19, 0.36, 0.39, 0.36, 0.62, 0.62, 0.53, 0.11, 0.18, 0.20, 0.37, 0.40, 0.37, 0.20, 0.09, 0.18]
+    
+    e1 = []
+    e2 = []
+    e3 = []
+    
+    for i in range (350):
+        c1 = random.uniform(0.02, 0.98)
+        c2 = random.uniform(0.02, 1-c1)
+        c3 = 1-c1-c2
+    
+        e1.append(c1)
+        e2.append(c2)
+        e3.append(c3)
 
     # Create configuration strings
     config_range = []
     for i in range (len(e1)):
         config_range.append(elm1+f"{int(e1[i]*100)}"+elm2+f"{int(e2[i]*100)}"+elm3+f"{int(e3[i]*100)}")
 
+    print(config_range)
+
+
     # write the lmp data files
-    for j in range (len(config_range)):
-        ternary_configs(matrix, elm1, elm2, elm3, e2[j], e3[j], conf_num,
+    for j in range (len(e1)):
+        ternary_configs(matrix, elm1, elm2, elm3, e2[j], e1[j], conf_num,
                          f"{config_range[j]}", m1=m1, m2=m2, m3=m3, lmpdir="lammps-data", dbdir="db")
