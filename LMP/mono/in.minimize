@@ -8,7 +8,7 @@ boundary        p p p
 
 # Atom definition
 atom_style      atomic
-read_data	Fe_0.lmp
+read_data	Cr_0.lmp
 
 
 # Settings
@@ -22,8 +22,9 @@ pair_coeff	* * NiFeCr.eam.alloy Fe
 # Minimization
 reset_timestep  0
 thermo          10
+fix 1		all box/relax iso 0.0 vmax 0.001
 min_style       cg
 minimize        1e-6 1e-8 1000 10000
 
 # Output
-write_data      	Fe_relaxed.lmp
+write_data      	Cr_relaxed.lmp

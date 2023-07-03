@@ -282,3 +282,15 @@ def update_lammps_data_file(lammps_file, atoms):
 
 # # # Convert CIF files to LAMMPS data format
 # convert_cif_to_lammps(directory)
+
+
+atoms = lammpsdata.read_lammps_data("LMP/mono/Fe_relaxed.lmp", style='atomic')
+element_symbols = ["Fe"]
+atom_types = atoms.get_array('type')
+atom_symbols = [element_symbols[atom_type-1] for atom_type in atom_types]
+atoms.set_chemical_symbols(atom_symbols)
+structure = AseAtomsAdaptor().get_structure(atoms)
+
+# Write CIF file using CifWriter
+cif_writer = CifWriter(structure)
+cif_writer.write_file('LMP/mono/cif/Fe.cif')
