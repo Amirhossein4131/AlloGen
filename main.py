@@ -6,7 +6,7 @@ from calculator import *
 from create_db import *
 
 # %%
-#reset_db_creation_pipeline()
+reset_db_creation_pipeline()
 #binary_data_creator(elm1="Ni", elm2="Fe", celldim=3, lc=3.52, conf_num=1, m1='58.69', m2='55.84', mat="NiFe")
 # binary_data_creator(elm1="Ni", elm2="Cr", celldim=3, lc=3.52, conf_num=20, m1='58.69',  m2='51.99', mat="NiCr")
 # binary_data_creator(elm1="Fe", elm2="Cr", celldim=3, lc=3.52, conf_num=20, m1='55.84',  m2='51.99', mat="FeCr")
@@ -29,4 +29,4 @@ from create_db import *
 
 # create_db("train")
 
-retrain_property_calculator("LMP/opt", "opt/")
+#retrain_property_calculator("LMP/opt", "opt/")
