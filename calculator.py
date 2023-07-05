@@ -44,7 +44,7 @@ def modify_file(input_file, output_file, search_lines, modification_lines):
     
 
 # %%
-def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
+def lmp_energy_calculator(pot, pot_name, alloytype):
     """minimises the structures and calculates the energy"""
     # dict to write info to and needed directories
 
@@ -76,9 +76,13 @@ def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
 
     # minimise and save prop to file
     for name in file_names:
+        with open(f'{folder_path}/{name}') as file:
+            lines = file.readlines()
+            elms = lines[0]
+
         modification_lines = [
             ('pair_style', f'pair_style {pot}'),
-            ('pair_coeff', f'pair_coeff * * LMP/potentials/{pot_name} {elm1} {elm2} {elm3}'),
+            ('pair_coeff', f'pair_coeff * * LMP/potentials/{pot_name} {elms}'),
             ("read_data", f"read_data {folder_path}/{name}"), 
             ('wd', f'write_data ./LMP/relaxed-structures/{name}')]
         
@@ -94,9 +98,14 @@ def lmp_energy_calculator(pot, pot_name, elm1, elm2, alloytype, elm3=""):
     os.system("rm LMP/lammps-inputs/*_min")
     os.system("rm log.lammps")
 
-    with open("LMP/finalDB/energy.json", "a") as file:
-        # Write the dictionary to the file in JSON format
-        json.dump(prop, file)
+    if alloytype == "opt":
+        with open("LMP/opt/energy.json", "a") as file:
+            # Write the dictionary to the file in JSON format
+            json.dump(prop, file)
+    else:
+        with open("LMP/finalDB/energy.json", "a") as file:
+            # Write the dictionary to the file in JSON format
+            json.dump(prop, file)
 
 
 def lmp_elastic_calculator(pot, pot_name, alloytype):
@@ -161,24 +170,29 @@ def lmp_elastic_calculator(pot, pot_name, alloytype):
             
     os.system("rm log.lammps restart.equil")
 
-    with open("LMP/finalDB/elastic.json", "a") as file:
-        # Write the dictionary to the file in JSON format
-        json.dump(prop, file)
+    if alloytype == "opt":
+        with open("LMP/opt/elastic.json", "a") as file:
+            # Write the dictionary to the file in JSON format
+            json.dump(prop, file)
+    else:
+        with open("LMP/finalDB/elastic.json", "a") as file:
+            # Write the dictionary to the file in JSON format
+            json.dump(prop, file)
     
-    
-    
+
 
 # %%
 def extract_element_types(string):
     element_types = re.findall(r'[A-Z][a-z]*', string)
     return element_types
 
-def lammps_data_to_cif(type1, type2, type3=None):
+def lammps_data_to_cif(cif_path):
     """Converts relaxed lammps datafiles to cif files"""
     # Path to folders
     Path('LMP/cif-files').mkdir(parents=True, exist_ok=True)
+    Path('LMP/opt/cif-files').mkdir(parents=True, exist_ok=True)
+
     folder_path = f'LMP/relaxed-structures/'
-    cif_path = f'LMP/cif-files/'
     # list of available structures
     files = os.listdir(folder_path)
     file_names = []
@@ -204,8 +218,8 @@ def lammps_data_to_cif(type1, type2, type3=None):
 
         # Write CIF file using CifWriter
         cif_writer = CifWriter(structure)
-        cif_writer.write_file(cif_path+name.split('.')[0]+'.cif')
-
+        cif_writer.write_file(cif_path+'cif-files/'+name.split('.')[0]+'.cif')
+        print(cif_path+name.split('.')[0]+'.cif')
 
 #%%
 
@@ -213,16 +227,17 @@ def convert_cif_to_lammps(directory):
     # Get a list of all CIF files in the directory
     cif_files = [f for f in os.listdir(directory) if f.endswith('.cif')]
     Path('LMP/generated/lammps-data').mkdir(parents=True, exist_ok=True)
+    Path('LMP/opt/lammps-data').mkdir(parents=True, exist_ok=True)
 
     # Convert each CIF file to LAMMPS data format
     for cif_file in cif_files:
         cif_path = os.path.join(directory, cif_file)
-
+        data_path = os.path.join(directory+"/lammps-data", cif_file)
         # Load CIF file
         atoms = read(cif_path)
 
         # Save LAMMPS data file
-        lammps_file = os.path.splitext(cif_path)[0] + '.data' 
+        lammps_file = os.path.splitext(data_path)[0] + '.data' 
         write(lammps_file, atoms, format='lammps-data')
 
         # Update the LAMMPS data file with masses
@@ -230,9 +245,6 @@ def convert_cif_to_lammps(directory):
 
         print(f"Converted {cif_file} to {lammps_file}")
     os.system('mv LMP/generated/*.data LMP/generated/lammps-data')
-
-
-
 
 
 
@@ -277,20 +289,16 @@ def update_lammps_data_file(lammps_file, atoms):
     return symbols 
 
 
-# # Specify the directory containing CIF files
-# directory = './LMP/generated/'
+def retrain_property_calculator(dir):
 
-# # # Convert CIF files to LAMMPS data format
-# convert_cif_to_lammps(directory)
+    reset_db_creation_pipeline()
+    convert_cif_to_lammps(directory=dir)
+    lmp_energy_calculator("eam/alloy", "NiFeCr.eam.alloy", alloytype='opt')
+    lmp_elastic_calculator("eam/alloy", "NiFeCr.eam.alloy", alloytype='opt')
+    lammps_data_to_cif('LMP/opt/')
 
 
-atoms = lammpsdata.read_lammps_data("LMP/mono/Fe_relaxed.lmp", style='atomic')
-element_symbols = ["Fe"]
-atom_types = atoms.get_array('type')
-atom_symbols = [element_symbols[atom_type-1] for atom_type in atom_types]
-atoms.set_chemical_symbols(atom_symbols)
-structure = AseAtomsAdaptor().get_structure(atoms)
 
-# Write CIF file using CifWriter
-cif_writer = CifWriter(structure)
-cif_writer.write_file('LMP/mono/cif/Fe.cif')
+retrain_property_calculator("LMP/opt")
+
+    

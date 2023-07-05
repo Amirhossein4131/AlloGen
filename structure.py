@@ -91,13 +91,8 @@ def binary_data_creator (elm1, elm2, celldim, lc, conf_num, m1, m2, mat):
 
     # Create configuration strings
     config_range = []
-    # elm1_perc = 5
-    # for i in range (18):
-    #     config_range.append(elm1+elm2+f"{elm1_perc}")
-    #     elm1_perc += 5
-    # print(config_range)
 
-    for i in range (50):
+    for i in range (5):
         c1 = round(random.uniform(0.02, 0.98), 2)
         config_range.append(c1)
        
@@ -169,11 +164,6 @@ def ternary_data_creator(elm1, elm2, elm3, celldim, lc, conf_num, m1, m2, m3):
     # define matrix
     matrix = fcc_supercell(celldim, elm1, lc)
 
-    # compositions
-    #e1 = [0.8, 0.1, 0.1, 0.2, 0.2, 0.2, 0.4, 0.4, 0.6, 0.82, 0.85, 0.90, 0.12, 0.08, 0.13, 0.11, 0.13, 0.09, 0.23, 0.25, 0.18, 0.22, 0.23, 0.18, 0.17, 0.21, 0.24, 0.44, 0.38, 0.45, 0.42, 0.36, 0.45, 0.62, 0.65, 0.58]
-    #e2 = [0.1, 0.1, 0.8, 0.6, 0.4, 0.2, 0.4, 0.2, 0.2, 0.08, 0.05, 0.07, 0.07, 0.09, 0.12, 0.84, 0.83, 0.76, 0.66, 0.58, 0.63, 0.44, 0.38, 0.46, 0.21, 0.17, 0.23, 0.45, 0.44, 0.35, 0.21, 0.24, 0.18, 0.18, 0.16, 0.24]
-    #e3 = [0.1, 0.8, 0.1, 0.2, 0.4, 0.6, 0.2, 0.4, 0.2, 0.10, 0.10, 0.03, 0.81, 0.83, 0.75, 0.05, 0.04, 0.15, 0.11, 0.17, 0.19, 0.36, 0.39, 0.36, 0.62, 0.62, 0.53, 0.11, 0.18, 0.20, 0.37, 0.40, 0.37, 0.20, 0.09, 0.18]
-    
     e1 = []
     e2 = []
     e3 = []
