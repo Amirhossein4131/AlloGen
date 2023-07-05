@@ -289,16 +289,15 @@ def update_lammps_data_file(lammps_file, atoms):
     return symbols 
 
 
-def retrain_property_calculator(dir):
+def retrain_property_calculator(dir, alloytype):
 
     reset_db_creation_pipeline()
     convert_cif_to_lammps(directory=dir)
-    lmp_energy_calculator("eam/alloy", "NiFeCr.eam.alloy", alloytype='opt')
-    lmp_elastic_calculator("eam/alloy", "NiFeCr.eam.alloy", alloytype='opt')
-    lammps_data_to_cif('LMP/opt/')
+    lmp_energy_calculator("eam/alloy", "NiFeCr.eam.alloy", alloytype=alloytype)
+    lmp_elastic_calculator("eam/alloy", "NiFeCr.eam.alloy", alloytype=alloytype)
+    lammps_data_to_cif(dir+'/')
 
 
 
-retrain_property_calculator("LMP/opt")
 
     
