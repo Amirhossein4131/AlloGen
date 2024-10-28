@@ -4,7 +4,7 @@ AlloGen is a Python library aimed at creation of databases from MD simulations t
 
 ## Features
 
-This repo needs will be cleaned soon and a documentation will be added.
+This repo will be cleaned up soon and a documentation will be added.
 
 ## License 
 
